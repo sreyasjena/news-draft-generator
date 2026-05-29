@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage'
 import EditorPage from './pages/EditorPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import HistoryPage from './pages/HistoryPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -14,6 +15,11 @@ function App() {
       <Route path="/editor" element={
         <ProtectedRoute>
           <EditorPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/history" element={
+        <ProtectedRoute>
+          <HistoryPage />
         </ProtectedRoute>
       } />
     </Routes>

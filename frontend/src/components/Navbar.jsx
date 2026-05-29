@@ -44,11 +44,17 @@ export default function Navbar() {
           </Link>
 
           {user && (
-            <Link to="/editor"
-              className={`text-sm font-medium transition-colors ${location.pathname === '/editor' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
-              Editor
-            </Link>
-          )}
+  <>
+    <Link to="/editor"
+      className={`text-sm font-medium transition-colors ${location.pathname === '/editor' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+      Editor
+    </Link>
+    <Link to="/history"
+      className={`text-sm font-medium transition-colors ${location.pathname === '/history' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+      History
+    </Link>
+  </>
+)}
 
           {user ? (
             <div className="flex items-center gap-3">

@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
+import { generateDraft, getSEO, injectImages, checkPlagiarism,
+  getToneHeatmap, detectBias, getSocialPack,
+  getEngagementScore, factCheck } from '../api/client'
+import { supabase } from '../utils/supabase'
 import LeftPanel from '../components/editor/LeftPanel'
 import CenterPanel from '../components/editor/CenterPanel'
 import RightPanel from '../components/editor/RightPanel'
 import ImagePopup from '../components/editor/popups/ImagePopup'
 import SocialPopup from '../components/editor/popups/SocialPopup'
-import { generateDraft, getSEO, injectImages, checkPlagiarism,
-  getToneHeatmap, detectBias, getSocialPack,
-  getEngagementScore, factCheck } from '../api/client'
 
 const SIZES = [
   { key: 'short', words: 'short (150-200 words)' },
@@ -35,6 +36,37 @@ export default function EditorPage() {
   const addFact = () => setFacts([...facts, ''])
   const removeFact = (i) => setFacts(facts.filter((_, idx) => idx !== i))
   const updateFact = (i, val) => { const u = [...facts]; u[i] = val; setFacts(u) }
+
+  const saveArticle = async (art, collectedResults) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase.from('articles').insert({
+        user_id: user.id,
+        headline: art.headline,
+        lede: art.lede,
+        body: art.body,
+        background: art.background,
+        quotes: art.quotes,
+        tags: art.tags,
+        word_count: art.word_count,
+        tone: tone,
+        style: style,
+        size: articleSize,
+        seo_score: collectedResults?.seo?.seo_score || null,
+        engagement_score: collectedResults?.engagement?.overall_score || null,
+        bias_direction: collectedResults?.bias?.bias_direction || null,
+        bias_score: collectedResults?.bias?.bias_score || null,
+        originality_score: collectedResults?.plagiarism?.originality_score || null,
+      })
+
+      if (error) console.error('Save error:', error)
+      else console.log('Article saved to Supabase')
+    } catch (e) {
+      console.error('Save error:', e)
+    }
+  }
 
   const handleGenerate = async () => {
     const validFacts = facts.filter(f => f.trim())
@@ -67,15 +99,22 @@ export default function EditorPage() {
       { key: 'plagiarism', fn: () => checkPlagiarism(bodyText), extract: r => r.data.result },
       { key: 'factcheck', fn: () => factCheck(art), extract: r => r.data.fact_check },
     ]
+
+    const collectedResults = {}
+
     for (const task of tasks) {
       try {
         const res = await task.fn()
-        setResults(prev => ({ ...prev, [task.key]: task.extract(res) }))
+        const extracted = task.extract(res)
+        collectedResults[task.key] = extracted
+        setResults(prev => ({ ...prev, [task.key]: extracted }))
       } catch (e) {
         setResults(prev => ({ ...prev, [task.key]: null }))
       }
     }
+
     setRunningAll(false)
+    await saveArticle(art, collectedResults)
   }
 
   const handleGenerateSocial = async () => {
@@ -121,6 +160,10 @@ export default function EditorPage() {
 
   const isImageSelected = (img) =>
     (results.chosenImages || []).find(i => i.url === img.url)
+
+  const filteredImages = selectedImages.filter(img =>
+    imageFilter === 'All' || img.source === imageFilter
+  )
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
