@@ -1,5 +1,4 @@
 import { downloadAsHTML, downloadAsPDF } from '../../utils/download'
-import ToneRefiner from './ToneRefiner'
 
 export default function ArticleView({ article, chosenImages }) {
   return (
@@ -70,8 +69,6 @@ export default function ArticleView({ article, chosenImages }) {
 
       <p className="text-slate-500 text-xs mb-8">Word count: {article.word_count}</p>
 
-      {/* Tone Refiner */}
-      <ToneRefiner article={article} chosenImages={chosenImages} />
     </div>
   )
 }

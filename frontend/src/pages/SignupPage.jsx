@@ -62,6 +62,12 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
 
         {/* Logo */}
+        <div className="flex justify-start mb-6">
+  <Link to="/"
+    className="font-body inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+    ← Back to Home
+  </Link>
+</div>
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
