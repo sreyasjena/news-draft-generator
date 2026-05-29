@@ -13,60 +13,117 @@ os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 def generate_news_draft(facts: list[str], tone: str = "neutral", style: str = "news article", size: str = "medium (400-500 words)") -> dict:
 
     if "short" in size:
-        word_instruction = """STRICT WORD COUNT REQUIREMENT: Write EXACTLY 150-200 words in the body paragraphs combined.
-        - Write EXACTLY 2 short body paragraphs
-        - Each paragraph must be 2-3 sentences only
-        - Do NOT write more than 200 words total in body"""
-        num_paragraphs = "EXACTLY 2 paragraphs"
-
-    elif "long" in size:
-        word_instruction = """STRICT WORD COUNT REQUIREMENT: Write EXACTLY 800-1000 words in the body paragraphs combined.
-        - Write EXACTLY 7-8 detailed body paragraphs
-        - Each paragraph must be 4-6 sentences long
-        - Include detailed context, analysis, quotes integration and background
-        - Do NOT write less than 800 words total in body"""
-        num_paragraphs = "EXACTLY 7-8 paragraphs"
-
-    else:
-        word_instruction = """STRICT WORD COUNT REQUIREMENT: Write EXACTLY 400-500 words in the body paragraphs combined.
-        - Write EXACTLY 4-5 body paragraphs
-        - Each paragraph must be 3-4 sentences long
-        - Do NOT write less than 400 words total in body"""
-        num_paragraphs = "EXACTLY 4-5 paragraphs"
-
-    prompt = f"""
-You are an expert journalist. Generate a complete, publish-ready news article.
+        prompt = f"""
+You are an expert journalist writing a SHORT news brief.
 
 TONE: {tone}
 STYLE: {style}
-SIZE REQUIREMENT: {size}
 
-{word_instruction}
+STRICT RULES FOR SHORT ARTICLE:
+- Headline: maximum 10 words
+- Lede: exactly 1 sentence (25-30 words)
+- Body: exactly 2 paragraphs
+- Paragraph 1: exactly 2 sentences (40-50 words)
+- Paragraph 2: exactly 2 sentences (40-50 words)
+- Background: exactly 1 sentence (20-25 words)
+- Total body word count: 150-200 words
+- Think of this as a news brief or news flash
+- Be concise, punchy and direct
+- Every sentence must be complete and meaningful
 
-FACTS PROVIDED:
+FACTS:
 {chr(10).join(f"- {fact}" for fact in facts)}
-
-CRITICAL INSTRUCTIONS:
-- Follow the inverted pyramid structure
-- Write a compelling headline (under 12 words)
-- Write a strong lede (who, what, when, where, why in 1-2 sentences)
-- Body must have {num_paragraphs} — this is MANDATORY
-- Add a background/context paragraph at the end
-- Generate 2 realistic quotes relevant to the story
-- Suggest 5 relevant tags
-- STRICTLY follow the word count — do not deviate
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT:
 {{
-    "headline": "...",
-    "lede": "...",
-    "body": ["paragraph1", "paragraph2", "paragraph3", "paragraph4", "paragraph5"],
-    "background": "...",
+    "headline": "short headline here",
+    "lede": "one sentence lede here",
+    "body": ["paragraph one with exactly 2 sentences", "paragraph two with exactly 2 sentences"],
+    "background": "one sentence background here",
     "quotes": ["quote1", "quote2"],
     "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
     "word_count": 0
 }}
 """
+
+    elif "long" in size:
+        prompt = f"""
+You are an expert journalist writing a LONG in-depth news article.
+
+TONE: {tone}
+STYLE: {style}
+
+STRICT RULES FOR LONG ARTICLE:
+- Headline: maximum 12 words
+- Lede: 2 sentences (50-60 words)
+- Body: exactly 7 paragraphs
+- Each paragraph: 4-5 sentences (100-130 words each)
+- Background: 2-3 sentences (60-80 words)
+- Total body word count: 800-1000 words
+- Include detailed analysis, context, impact and expert perspective
+- Each paragraph must cover a different angle of the story
+- Every sentence must be complete, meaningful and add new information
+
+FACTS:
+{chr(10).join(f"- {fact}" for fact in facts)}
+
+RESPOND ONLY IN THIS EXACT JSON FORMAT:
+{{
+    "headline": "headline here",
+    "lede": "two sentence lede here",
+    "body": [
+        "paragraph 1 with 4-5 sentences",
+        "paragraph 2 with 4-5 sentences",
+        "paragraph 3 with 4-5 sentences",
+        "paragraph 4 with 4-5 sentences",
+        "paragraph 5 with 4-5 sentences",
+        "paragraph 6 with 4-5 sentences",
+        "paragraph 7 with 4-5 sentences"
+    ],
+    "background": "detailed background here",
+    "quotes": ["quote1", "quote2"],
+    "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+    "word_count": 0
+}}
+"""
+
+    else:
+        prompt = f"""
+You are an expert journalist writing a MEDIUM length news article.
+
+TONE: {tone}
+STYLE: {style}
+
+STRICT RULES FOR MEDIUM ARTICLE:
+- Headline: maximum 12 words
+- Lede: 1-2 sentences (30-40 words)
+- Body: exactly 4 paragraphs
+- Each paragraph: 3-4 sentences (80-100 words each)
+- Background: 1-2 sentences (40-50 words)
+- Total body word count: 400-500 words
+- Each paragraph must cover a different aspect of the story
+- Every sentence must be complete and meaningful
+
+FACTS:
+{chr(10).join(f"- {fact}" for fact in facts)}
+
+RESPOND ONLY IN THIS EXACT JSON FORMAT:
+{{
+    "headline": "headline here",
+    "lede": "lede here",
+    "body": [
+        "paragraph 1 with 3-4 sentences",
+        "paragraph 2 with 3-4 sentences",
+        "paragraph 3 with 3-4 sentences",
+        "paragraph 4 with 3-4 sentences"
+    ],
+    "background": "background here",
+    "quotes": ["quote1", "quote2"],
+    "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+    "word_count": 0
+}}
+"""
+
     response = completion(
         model=LLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
