@@ -84,7 +84,12 @@ export default function LeftPanel({
           <label className="text-slate-300 text-xs font-semibold uppercase mb-2 block">Article Size</label>
           <div className="flex gap-1">
             {SIZES.map(s => (
-              <button key={s.key} onClick={() => setArticleSize(s.key)}
+              <button
+                key={s.key}
+                onClick={() => {
+                  console.log('Size button clicked:', s.key)
+                  setArticleSize(s.key)
+                }}
                 className={articleSize === s.key
                   ? 'flex-1 flex flex-col items-center py-2 px-1 rounded-lg border bg-blue-500/20 border-blue-500/50 text-blue-300'
                   : 'flex-1 flex flex-col items-center py-2 px-1 rounded-lg border bg-slate-700 border-transparent text-slate-400 hover:text-white'}>

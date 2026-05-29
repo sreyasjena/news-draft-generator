@@ -10,12 +10,6 @@ import RightPanel from '../components/editor/RightPanel'
 import ImagePopup from '../components/editor/popups/ImagePopup'
 import SocialPopup from '../components/editor/popups/SocialPopup'
 
-const SIZES = [
-  { key: 'short', words: 'short (150-200 words)' },
-  { key: 'medium', words: 'medium (400-500 words)' },
-  { key: 'long', words: 'long (800-1000 words)' },
-]
-
 export default function EditorPage() {
   const [facts, setFacts] = useState(['', '', ''])
   const [tone, setTone] = useState('neutral')
@@ -36,6 +30,12 @@ export default function EditorPage() {
   const addFact = () => setFacts([...facts, ''])
   const removeFact = (i) => setFacts(facts.filter((_, idx) => idx !== i))
   const updateFact = (i, val) => { const u = [...facts]; u[i] = val; setFacts(u) }
+
+  const getSizeWords = (key) => {
+    if (key === 'short') return 'short (150-200 words)'
+    if (key === 'long') return 'long (800-1000 words)'
+    return 'medium (400-500 words)'
+  }
 
   const saveArticle = async (art, collectedResults) => {
     try {
@@ -76,8 +76,10 @@ export default function EditorPage() {
     setResults({})
     setSelectedImages([])
     try {
-      const selectedSize = SIZES.find(s => s.key === articleSize)?.words || 'medium (400-500 words)'
-      const res = await generateDraft(validFacts, tone, style, selectedSize)
+      const sizeWords = getSizeWords(articleSize)
+      console.log('Size key:', articleSize)
+      console.log('Size words sent to backend:', sizeWords)
+      const res = await generateDraft(validFacts, tone, style, sizeWords)
       const art = res.data.draft
       setArticle(art)
       runAllFeatures(art)
@@ -161,24 +163,30 @@ export default function EditorPage() {
   const isImageSelected = (img) =>
     (results.chosenImages || []).find(i => i.url === img.url)
 
-  const filteredImages = selectedImages.filter(img =>
-    imageFilter === 'All' || img.source === imageFilter
-  )
-
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
       <Navbar />
       <div className="flex flex-1 pt-16" style={{ height: 'calc(100vh - 64px)' }}>
 
         <LeftPanel
-          facts={facts} tone={tone} style={style}
-          articleSize={articleSize} selectedSocial={selectedSocial}
-          generating={generating} runningAll={runningAll}
-          article={article} socialLoading={socialLoading}
-          setTone={setTone} setStyle={setStyle}
-          setArticleSize={setArticleSize} setSelectedSocial={setSelectedSocial}
-          updateFact={updateFact} addFact={addFact} removeFact={removeFact}
-          handleGenerate={handleGenerate} handleGenerateSocial={handleGenerateSocial}
+          facts={facts}
+          tone={tone}
+          style={style}
+          articleSize={articleSize}
+          selectedSocial={selectedSocial}
+          generating={generating}
+          runningAll={runningAll}
+          article={article}
+          socialLoading={socialLoading}
+          setTone={setTone}
+          setStyle={setStyle}
+          setArticleSize={setArticleSize}
+          setSelectedSocial={setSelectedSocial}
+          updateFact={updateFact}
+          addFact={addFact}
+          removeFact={removeFact}
+          handleGenerate={handleGenerate}
+          handleGenerateSocial={handleGenerateSocial}
         />
 
         <CenterPanel
