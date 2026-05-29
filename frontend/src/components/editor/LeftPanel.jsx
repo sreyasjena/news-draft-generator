@@ -1,9 +1,9 @@
 const TONES = ['neutral', 'formal', 'engaging', 'urgent', 'analytical']
 const STYLES = ['news article', 'breaking news', 'feature story', 'opinion piece', 'press release']
 const SIZES = [
-  { key: 'short', label: 'Short', desc: '150-200 words' },
-  { key: 'medium', label: 'Medium', desc: '400-500 words' },
-  { key: 'long', label: 'Long', desc: '800-1000 words' },
+  { key: 'short', label: 'Brief', desc: '2-3 facts' },
+  { key: 'medium', label: 'Standard', desc: '4-6 facts' },
+  { key: 'long', label: 'In-depth', desc: '7-10 facts' },
 ]
 const SOCIAL_FORMATS = [
   { key: 'twitter', label: 'Twitter/X', desc: 'Under 240 chars', icon: '🐦' },
@@ -82,14 +82,12 @@ export default function LeftPanel({
         {/* Article Size */}
         <div>
           <label className="text-slate-300 text-xs font-semibold uppercase mb-2 block">Article Size</label>
+          <p className="text-slate-500 text-xs mb-2">More facts = longer article</p>
           <div className="flex gap-1">
             {SIZES.map(s => (
               <button
                 key={s.key}
-                onClick={() => {
-                  console.log('Size button clicked:', s.key)
-                  setArticleSize(s.key)
-                }}
+                onClick={() => setArticleSize(s.key)}
                 className={articleSize === s.key
                   ? 'flex-1 flex flex-col items-center py-2 px-1 rounded-lg border bg-blue-500/20 border-blue-500/50 text-blue-300'
                   : 'flex-1 flex flex-col items-center py-2 px-1 rounded-lg border bg-slate-700 border-transparent text-slate-400 hover:text-white'}>
