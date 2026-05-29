@@ -21,15 +21,16 @@ STYLE: {style}
 
 STRICT RULES FOR SHORT ARTICLE:
 - Headline: maximum 10 words
-- Lede: exactly 1 sentence (25-30 words)
+- Lede: exactly 1 sentence (30-40 words minimum)
 - Body: exactly 2 paragraphs
-- Paragraph 1: exactly 2 sentences (40-50 words)
-- Paragraph 2: exactly 2 sentences (40-50 words)
-- Background: exactly 1 sentence (20-25 words)
-- Total body word count: 150-200 words
-- Think of this as a news brief or news flash
-- Be concise, punchy and direct
-- Every sentence must be complete and meaningful
+- Paragraph 1: exactly 3 sentences (70-80 words)
+- Paragraph 2: exactly 3 sentences (70-80 words)
+- Background: exactly 2 sentences (30-40 words)
+- Total body word count: MINIMUM 150 words MAXIMUM 200 words
+- Think of this as a news brief — complete but concise
+- Every sentence must be detailed, informative and meaningful
+- Do NOT write one word sentences
+- Each sentence must be at least 15 words long
 
 FACTS:
 {chr(10).join(f"- {fact}" for fact in facts)}
@@ -37,10 +38,10 @@ FACTS:
 RESPOND ONLY IN THIS EXACT JSON FORMAT:
 {{
     "headline": "short headline here",
-    "lede": "one sentence lede here",
-    "body": ["paragraph one with exactly 2 sentences", "paragraph two with exactly 2 sentences"],
-    "background": "one sentence background here",
-    "quotes": ["quote1", "quote2"],
+    "lede": "one detailed sentence lede of minimum 30 words here",
+    "body": ["paragraph one with exactly 3 detailed sentences totaling 70-80 words", "paragraph two with exactly 3 detailed sentences totaling 70-80 words"],
+    "background": "two sentence background totaling 30-40 words here",
+    "quotes": ["quote1 minimum 15 words", "quote2 minimum 15 words"],
     "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
     "word_count": 0
 }}
@@ -59,10 +60,11 @@ STRICT RULES FOR LONG ARTICLE:
 - Body: exactly 7 paragraphs
 - Each paragraph: 4-5 sentences (100-130 words each)
 - Background: 2-3 sentences (60-80 words)
-- Total body word count: 800-1000 words
+- Total body word count: MINIMUM 800 words MAXIMUM 1000 words
 - Include detailed analysis, context, impact and expert perspective
 - Each paragraph must cover a different angle of the story
 - Every sentence must be complete, meaningful and add new information
+- Each sentence must be at least 15 words long
 
 FACTS:
 {chr(10).join(f"- {fact}" for fact in facts)}
@@ -72,16 +74,16 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT:
     "headline": "headline here",
     "lede": "two sentence lede here",
     "body": [
-        "paragraph 1 with 4-5 sentences",
-        "paragraph 2 with 4-5 sentences",
-        "paragraph 3 with 4-5 sentences",
-        "paragraph 4 with 4-5 sentences",
-        "paragraph 5 with 4-5 sentences",
-        "paragraph 6 with 4-5 sentences",
-        "paragraph 7 with 4-5 sentences"
+        "paragraph 1 with 4-5 detailed sentences totaling 100-130 words",
+        "paragraph 2 with 4-5 detailed sentences totaling 100-130 words",
+        "paragraph 3 with 4-5 detailed sentences totaling 100-130 words",
+        "paragraph 4 with 4-5 detailed sentences totaling 100-130 words",
+        "paragraph 5 with 4-5 detailed sentences totaling 100-130 words",
+        "paragraph 6 with 4-5 detailed sentences totaling 100-130 words",
+        "paragraph 7 with 4-5 detailed sentences totaling 100-130 words"
     ],
-    "background": "detailed background here",
-    "quotes": ["quote1", "quote2"],
+    "background": "detailed background of 60-80 words here",
+    "quotes": ["quote1 minimum 15 words", "quote2 minimum 15 words"],
     "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
     "word_count": 0
 }}
@@ -100,9 +102,10 @@ STRICT RULES FOR MEDIUM ARTICLE:
 - Body: exactly 4 paragraphs
 - Each paragraph: 3-4 sentences (80-100 words each)
 - Background: 1-2 sentences (40-50 words)
-- Total body word count: 400-500 words
+- Total body word count: MINIMUM 400 words MAXIMUM 500 words
 - Each paragraph must cover a different aspect of the story
 - Every sentence must be complete and meaningful
+- Each sentence must be at least 15 words long
 
 FACTS:
 {chr(10).join(f"- {fact}" for fact in facts)}
@@ -112,13 +115,13 @@ RESPOND ONLY IN THIS EXACT JSON FORMAT:
     "headline": "headline here",
     "lede": "lede here",
     "body": [
-        "paragraph 1 with 3-4 sentences",
-        "paragraph 2 with 3-4 sentences",
-        "paragraph 3 with 3-4 sentences",
-        "paragraph 4 with 3-4 sentences"
+        "paragraph 1 with 3-4 detailed sentences totaling 80-100 words",
+        "paragraph 2 with 3-4 detailed sentences totaling 80-100 words",
+        "paragraph 3 with 3-4 detailed sentences totaling 80-100 words",
+        "paragraph 4 with 3-4 detailed sentences totaling 80-100 words"
     ],
-    "background": "background here",
-    "quotes": ["quote1", "quote2"],
+    "background": "background of 40-50 words here",
+    "quotes": ["quote1 minimum 15 words", "quote2 minimum 15 words"],
     "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
     "word_count": 0
 }}
