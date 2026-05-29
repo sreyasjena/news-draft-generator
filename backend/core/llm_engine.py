@@ -11,27 +11,50 @@ os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 
 def generate_news_draft(facts: list[str], tone: str = "neutral", style: str = "news article", size: str = "medium (400-500 words)") -> dict:
+
+    if "short" in size:
+        word_instruction = """STRICT WORD COUNT REQUIREMENT: Write EXACTLY 150-200 words in the body paragraphs combined.
+        - Write EXACTLY 2 short body paragraphs
+        - Each paragraph must be 2-3 sentences only
+        - Do NOT write more than 200 words total in body"""
+        num_paragraphs = "EXACTLY 2 paragraphs"
+
+    elif "long" in size:
+        word_instruction = """STRICT WORD COUNT REQUIREMENT: Write EXACTLY 800-1000 words in the body paragraphs combined.
+        - Write EXACTLY 7-8 detailed body paragraphs
+        - Each paragraph must be 4-6 sentences long
+        - Include detailed context, analysis, quotes integration and background
+        - Do NOT write less than 800 words total in body"""
+        num_paragraphs = "EXACTLY 7-8 paragraphs"
+
+    else:
+        word_instruction = """STRICT WORD COUNT REQUIREMENT: Write EXACTLY 400-500 words in the body paragraphs combined.
+        - Write EXACTLY 4-5 body paragraphs
+        - Each paragraph must be 3-4 sentences long
+        - Do NOT write less than 400 words total in body"""
+        num_paragraphs = "EXACTLY 4-5 paragraphs"
+
     prompt = f"""
 You are an expert journalist. Generate a complete, publish-ready news article.
 
 TONE: {tone}
 STYLE: {style}
-SIZE: {size}
+SIZE REQUIREMENT: {size}
+
+{word_instruction}
 
 FACTS PROVIDED:
 {chr(10).join(f"- {fact}" for fact in facts)}
 
-INSTRUCTIONS:
+CRITICAL INSTRUCTIONS:
 - Follow the inverted pyramid structure
 - Write a compelling headline (under 12 words)
 - Write a strong lede (who, what, when, where, why in 1-2 sentences)
-- Article size: {size}. Adjust number of paragraphs accordingly:
-  * Short (150-200 words) = 2-3 short paragraphs
-  * Medium (400-500 words) = 4-5 paragraphs
-  * Long (800-1000 words) = 7-8 detailed paragraphs with more context
+- Body must have {num_paragraphs} — this is MANDATORY
 - Add a background/context paragraph at the end
 - Generate 2 realistic quotes relevant to the story
 - Suggest 5 relevant tags
+- STRICTLY follow the word count — do not deviate
 
 RESPOND ONLY IN THIS EXACT JSON FORMAT:
 {{
