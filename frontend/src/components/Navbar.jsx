@@ -19,6 +19,12 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    localStorage.removeItem('editor_facts')
+    localStorage.removeItem('editor_article')
+    localStorage.removeItem('editor_results')
+    localStorage.removeItem('editor_tone')
+    localStorage.removeItem('editor_style')
+    localStorage.removeItem('editor_size')
     navigate('/')
   }
 
@@ -44,17 +50,17 @@ export default function Navbar() {
           </Link>
 
           {user && (
-  <>
-    <Link to="/editor"
-      className={`text-sm font-medium transition-colors ${location.pathname === '/editor' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
-      Editor
-    </Link>
-    <Link to="/history"
-      className={`text-sm font-medium transition-colors ${location.pathname === '/history' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
-      History
-    </Link>
-  </>
-)}
+            <>
+              <Link to="/editor"
+                className={`text-sm font-medium transition-colors ${location.pathname === '/editor' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+                Editor
+              </Link>
+              <Link to="/history"
+                className={`text-sm font-medium transition-colors ${location.pathname === '/history' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>
+                History
+              </Link>
+            </>
+          )}
 
           {user ? (
             <div className="flex items-center gap-3">
