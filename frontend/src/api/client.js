@@ -1,12 +1,13 @@
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
-  headers: { 'Content-Type': 'application/json' }
+  baseURL: 'https://news-draft-generator.onrender.com/api',
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 120000
 })
 
-export const generateDraft = (facts, tone, style) =>
-  API.post('/generate', { facts, tone, style })
+export const generateDraft = (facts, tone, style, size) =>
+  API.post('/generate', { facts, tone, style, size })
 
 export const refineTone = (article_text, target_tone) =>
   API.post('/refine-tone', { article_text, target_tone })
@@ -46,3 +47,6 @@ export const getSocialPack = (article, platform) =>
 
 export const detectBias = (text) =>
   API.post('/detect-bias', { text })
+
+export const pingBackend = () =>
+  API.get('/health').catch(() => {})

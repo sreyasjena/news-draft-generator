@@ -1,12 +1,18 @@
 import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
 import LandingPage from './pages/LandingPage'
 import EditorPage from './pages/EditorPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import HistoryPage from './pages/HistoryPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import { pingBackend } from './api/client'
 
 function App() {
+  useEffect(() => {
+    pingBackend()
+  }, [])
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
