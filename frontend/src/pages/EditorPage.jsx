@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import { generateDraft, getSEO, injectImages, checkPlagiarism,
   getToneHeatmap, detectBias, getSocialPack,
-  getEngagementScore, factCheck } from '../api/client'
+  getEngagementScore, factCheck, pingBackend } from '../api/client'
 import { supabase } from '../utils/supabase'
 import LeftPanel from '../components/editor/LeftPanel'
 import CenterPanel from '../components/editor/CenterPanel'
@@ -35,6 +35,20 @@ export default function EditorPage() {
   const [imagesLoading, setImagesLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState(false)
   const [imageFilter, setImageFilter] = useState('All')
+  const [serverReady, setServerReady] = useState(false)
+
+  // Wake up backend on page load
+  useEffect(() => {
+    const wakeServer = async () => {
+      try {
+        await pingBackend()
+        setServerReady(true)
+      } catch (e) {
+        setServerReady(false)
+      }
+    }
+    wakeServer()
+  }, [])
 
   // Save to localStorage
   useEffect(() => {
@@ -138,7 +152,15 @@ export default function EditorPage() {
       setArticle(art)
       runAllFeatures(art)
     } catch (e) {
-      alert('Error: ' + e.message)
+      if (
+        e.code === 'ECONNABORTED' ||
+        e.message.includes('timeout') ||
+        e.message.includes('Network Error')
+      ) {
+        alert('The server is waking up from sleep. Please wait 30 seconds and try again. This only happens on the first request.')
+      } else {
+        alert('Error: ' + e.message)
+      }
     } finally {
       setGenerating(false)
     }
@@ -220,6 +242,16 @@ export default function EditorPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
       <Navbar />
+
+      {/* Server waking up banner */}
+      {!serverReady && (
+        <div className="fixed top-16 left-0 right-0 z-40 bg-yellow-500/10 border-b border-yellow-500/20 px-6 py-2 text-center">
+          <p className="text-yellow-400 text-xs font-medium">
+            ⚡ Server is waking up — this takes about 30 seconds on first use. Please wait before generating.
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-1 pt-16" style={{ height: 'calc(100vh - 64px)' }}>
 
         <LeftPanel
