@@ -36,15 +36,21 @@ export default function LandingPage() {
   const [scrollY, setScrollY] = useState(0)
   const [visibleSections, setVisibleSections] = useState({})
   const [user, setUser] = useState(null)
+  const [userLoading, setUserLoading] = useState(true)
   const sectionRefs = useRef({})
 
-  // Check if user is logged in
+  // Check user session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user || null)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserLoading(false)
+    }
+    checkUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null)
+      setUserLoading(false)
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -331,18 +337,24 @@ export default function LandingPage() {
             16 professional journalism features. Zero compromise.
           </p>
 
-          {/* CTA */}
+          {/* CTA Buttons */}
           <div className="flex items-center justify-center gap-4 flex-wrap mb-12">
-            <Link to={user ? "/editor" : "/signup"}
-              className="btn-gold inline-flex items-center gap-3 px-10 py-4 rounded-xl text-lg font-display animate-glow">
-              {user ? "Go to Editor →" : "Start Writing Free →"}
-            </Link>
-            {!user && (
-              <Link to="/login"
-                className="font-body inline-flex items-center px-8 py-4 rounded-xl text-lg text-slate-400 hover:text-white transition-all duration-300"
-                style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-                Login
-              </Link>
+            {userLoading ? (
+              <div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <Link to={user ? "/editor" : "/signup"}
+                  className="btn-gold inline-flex items-center gap-3 px-10 py-4 rounded-xl text-lg font-display animate-glow">
+                  {user ? "Go to Editor →" : "Start Writing Free →"}
+                </Link>
+                {!user && (
+                  <Link to="/login"
+                    className="font-body inline-flex items-center px-8 py-4 rounded-xl text-lg text-slate-400 hover:text-white transition-all duration-300"
+                    style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
+                    Login
+                  </Link>
+                )}
+              </>
             )}
           </div>
 
@@ -416,7 +428,6 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Main grid */}
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="col-span-2 relative overflow-hidden rounded-2xl group" style={{ height: '340px' }}>
               <img src={UNSPLASH_IMAGES[0]} alt="newsroom"
@@ -463,7 +474,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Bottom row */}
           <div className="grid grid-cols-3 gap-4">
             {[
               { url: UNSPLASH_IMAGES[3], label: 'Press Release' },
@@ -519,8 +529,7 @@ export default function LandingPage() {
                 { step: '03', title: 'AI Writes', desc: 'GPT-4o drafts a complete article in seconds', icon: '⚡', color: '#c9a84c' },
                 { step: '04', title: 'Analyse', desc: '16 features run automatically on your draft', icon: '🚀', color: '#3b82f6' },
               ].map((s, i) => (
-                <div key={i} className="text-center"
-                  style={{ transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                <div key={i} className="text-center">
                   <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-3xl mb-6 mx-auto"
                     style={{
                       background: `linear-gradient(135deg, ${s.color}10, ${s.color}20)`,
@@ -562,8 +571,7 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {features.map((f, i) => (
-              <div key={i}
-                className="card-hover rounded-2xl p-6 cursor-default"
+              <div key={i} className="card-hover rounded-2xl p-6 cursor-default"
                 style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <div className="text-3xl mb-4">{f.icon}</div>
                 <h3 className="font-display text-white font-bold text-sm mb-2">{f.title}</h3>
@@ -683,19 +691,25 @@ export default function LandingPage() {
             Join journalists who use AI to 10x their drafting speed.
             Free forever. No credit card required.
           </p>
+
           <div className="flex items-center justify-center gap-4 flex-wrap mb-8">
-            <Link to={user ? "/editor" : "/signup"}
-              className="btn-gold inline-flex items-center gap-3 px-14 py-5 rounded-xl text-xl font-display animate-glow">
-              {user ? "Go to Editor →" : "Get Started Free →"}
-            </Link>
-            {!user && (
-              <Link to="/login"
-                className="font-body px-10 py-5 rounded-xl text-lg text-slate-400 hover:text-white transition-all duration-300 inline-flex items-center"
-                style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
-                Login
-              </Link>
+            {!userLoading && (
+              <>
+                <Link to={user ? "/editor" : "/signup"}
+                  className="btn-gold inline-flex items-center gap-3 px-14 py-5 rounded-xl text-xl font-display animate-glow">
+                  {user ? "Go to Editor →" : "Get Started Free →"}
+                </Link>
+                {!user && (
+                  <Link to="/login"
+                    className="font-body px-10 py-5 rounded-xl text-lg text-slate-400 hover:text-white transition-all duration-300 inline-flex items-center"
+                    style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                    Login
+                  </Link>
+                )}
+              </>
             )}
           </div>
+
           <p className="font-body text-slate-700 text-sm">
             {user ? "Welcome back — ready to write?" : "Sign up in 30 seconds · Free forever · No credit card"}
           </p>
