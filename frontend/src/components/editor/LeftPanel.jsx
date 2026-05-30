@@ -20,7 +20,7 @@ export default function LeftPanel({
   facts, tone, style, articleSize, selectedSocial, generating, runningAll, article, socialLoading,
   setTone, setStyle, setArticleSize, setSelectedSocial,
   updateFact, addFact, removeFact,
-  handleGenerate, handleGenerateSocial
+  handleGenerate, handleGenerateSocial, handleClear
 }) {
   const [angles, setAngles] = useState([])
   const [loadingAngles, setLoadingAngles] = useState(false)
@@ -181,6 +181,15 @@ export default function LeftPanel({
             </button>
           )}
         </div>
+
+        {/* Clear Button */}
+        {article && (
+          <button
+            onClick={handleClear}
+            className="w-full bg-slate-700 hover:bg-red-500/20 hover:border-red-500/40 border border-slate-600 text-slate-400 hover:text-red-400 text-xs font-semibold py-2 rounded-xl transition-colors">
+            🗑️ Clear & Start Fresh
+          </button>
+        )}
 
         {/* Generate Button */}
         <button

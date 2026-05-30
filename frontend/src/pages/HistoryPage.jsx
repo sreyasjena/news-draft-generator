@@ -49,6 +49,40 @@ export default function HistoryPage() {
     }
   }
 
+  const loadInEditor = (art) => {
+    localStorage.setItem('editor_article', JSON.stringify({
+      headline: art.headline,
+      lede: art.lede,
+      body: art.body,
+      background: art.background,
+      quotes: art.quotes,
+      tags: art.tags,
+      word_count: art.word_count
+    }))
+    localStorage.setItem('editor_tone', art.tone || 'neutral')
+    localStorage.setItem('editor_style', art.style || 'news article')
+    localStorage.setItem('editor_size', art.size || 'medium')
+    localStorage.setItem('editor_results', JSON.stringify({
+      seo: art.seo_score ? { seo_score: art.seo_score } : null,
+      engagement: art.engagement_score ? { overall_score: art.engagement_score } : null,
+      bias: art.bias_direction ? {
+        bias_direction: art.bias_direction,
+        bias_score: art.bias_score || 0,
+        overall_assessment: '',
+        biased_sentences: [],
+        emotional_words: []
+      } : null,
+      plagiarism: art.originality_score ? {
+        originality_score: art.originality_score,
+        risk_level: art.originality_score > 80 ? 'Low' : art.originality_score > 50 ? 'Medium' : 'High',
+        assessment: '',
+        recommendations: [],
+        flagged_phrases: []
+      } : null
+    }))
+    navigate('/editor')
+  }
+
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-IN', {
@@ -106,7 +140,8 @@ export default function HistoryPage() {
           <div className="flex gap-6">
 
             {/* Article List */}
-            <div className="w-96 flex-shrink-0 space-y-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+            <div className="w-96 flex-shrink-0 space-y-3 overflow-y-auto"
+              style={{ maxHeight: 'calc(100vh - 180px)' }}>
               {articles.map(art => (
                 <div key={art.id}
                   onClick={() => setSelected(art)}
@@ -166,6 +201,16 @@ export default function HistoryPage() {
                     </div>
                     <span className="text-slate-600 text-xs">{formatDate(art.created_at)}</span>
                   </div>
+
+                  {/* Quick edit button on card */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      loadInEditor(art)
+                    }}
+                    className="mt-3 w-full text-xs text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 py-1.5 rounded-lg transition-colors">
+                    ✏️ Edit in Editor
+                  </button>
                 </div>
               ))}
             </div>
@@ -181,7 +226,7 @@ export default function HistoryPage() {
                 <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8">
 
                   {/* Action buttons */}
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="text-slate-500 text-sm">{formatDate(selected.created_at)}</span>
                       <span className="text-slate-700">·</span>
@@ -189,12 +234,19 @@ export default function HistoryPage() {
                       <span className="text-slate-700">·</span>
                       <span className="text-slate-500 text-sm capitalize">{selected.style}</span>
                     </div>
-                    <button
-                      onClick={() => deleteArticle(selected.id)}
-                      disabled={deleting === selected.id}
-                      className="text-red-400 hover:text-red-300 text-sm border border-red-500/20 hover:border-red-500/40 px-4 py-2 rounded-lg transition-colors disabled:opacity-50">
-                      {deleting === selected.id ? 'Deleting...' : 'Delete'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => loadInEditor(selected)}
+                        className="text-blue-400 hover:text-blue-300 text-sm border border-blue-500/20 hover:border-blue-500/40 hover:bg-blue-500/10 px-4 py-2 rounded-lg transition-colors">
+                        ✏️ Edit in Editor
+                      </button>
+                      <button
+                        onClick={() => deleteArticle(selected.id)}
+                        disabled={deleting === selected.id}
+                        className="text-red-400 hover:text-red-300 text-sm border border-red-500/20 hover:border-red-500/40 px-4 py-2 rounded-lg transition-colors disabled:opacity-50">
+                        {deleting === selected.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Tags */}
@@ -253,13 +305,25 @@ export default function HistoryPage() {
                       {selected.quotes.map((q, i) => (
                         <blockquote key={i} className="border-l-4 border-yellow-500 pl-4 py-2 bg-yellow-500/5 rounded-r-xl">
                           <p className="text-slate-300 italic text-sm">"{q}"</p>
-                          <span className="text-yellow-500 text-xs mt-1 block">AI-generated quote, verify before publishing</span>
+                          <span className="text-yellow-500 text-xs mt-1 block">
+                            AI-generated quote, verify before publishing
+                          </span>
                         </blockquote>
                       ))}
                     </div>
                   )}
 
                   <p className="text-slate-600 text-xs">Word count: {selected.word_count}</p>
+
+                  {/* Load in Editor CTA at bottom */}
+                  <div className="mt-8 pt-6 border-t border-slate-700">
+                    <button
+                      onClick={() => loadInEditor(selected)}
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-colors text-sm">
+                      ✏️ Open in Editor to Edit
+                    </button>
+                  </div>
+
                 </div>
               )}
             </div>

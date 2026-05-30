@@ -67,9 +67,9 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
               <div className="flex items-center gap-2 mb-1">
                 <div className="flex-1 bg-slate-600 rounded-full h-3">
                   <div className="bg-green-500 h-3 rounded-full"
-                    style={{ width: results.plagiarism.originality_score + '%' }}></div>
+                    style={{ width: (results.plagiarism.originality_score || 0) + '%' }}></div>
                 </div>
-                <span className="text-green-400 font-bold text-sm">{results.plagiarism.originality_score}%</span>
+                <span className="text-green-400 font-bold text-sm">{results.plagiarism.originality_score || 0}%</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 text-xs">Originality</span>
@@ -78,7 +78,7 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
                   : results.plagiarism.risk_level === 'Medium'
                   ? 'text-xs px-2 py-0.5 rounded-full font-semibold bg-yellow-500/20 text-yellow-400'
                   : 'text-xs px-2 py-0.5 rounded-full font-semibold bg-red-500/20 text-red-400'}>
-                  {results.plagiarism.risk_level} Risk
+                  {results.plagiarism.risk_level || 'Low'} Risk
                 </span>
               </div>
             </>
@@ -112,10 +112,10 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
                   <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
                     <circle cx="18" cy="18" r="15.9" fill="none" stroke="#334155" strokeWidth="3" />
                     <circle cx="18" cy="18" r="15.9" fill="none" stroke="#a855f7" strokeWidth="3"
-                      strokeDasharray={results.engagement.overall_score + ' 100'} strokeLinecap="round" />
+                      strokeDasharray={(results.engagement.overall_score || 0) + ' 100'} strokeLinecap="round" />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">{results.engagement.overall_score}</span>
+                    <span className="text-white font-bold text-lg">{results.engagement.overall_score || 0}</span>
                   </div>
                 </div>
               </div>
@@ -136,10 +136,10 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
               <div key={label} className="mb-3">
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-slate-400">{label}</span>
-                  <span className="text-white font-semibold">{val}/100</span>
+                  <span className="text-white font-semibold">{val || 0}/100</span>
                 </div>
                 <div className="bg-slate-700 rounded-full h-2">
-                  <div className="h-2 rounded-full" style={{ width: val + '%', background: color }}></div>
+                  <div className="h-2 rounded-full" style={{ width: (val || 0) + '%', background: color }}></div>
                 </div>
               </div>
             ))}
@@ -159,9 +159,9 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex-1 bg-slate-600 rounded-full h-3">
                   <div className="bg-green-500 h-3 rounded-full"
-                    style={{ width: results.seo.seo_score + '%' }}></div>
+                    style={{ width: (results.seo.seo_score || 0) + '%' }}></div>
                 </div>
-                <span className="text-green-400 font-bold text-sm">{results.seo.seo_score}/100</span>
+                <span className="text-green-400 font-bold text-sm">{results.seo.seo_score || 0}/100</span>
               </div>
               <p className="text-slate-300 text-xs font-medium truncate">{results.seo.primary_keyword}</p>
               <p className="text-slate-500 text-xs truncate font-mono">{results.seo.slug}</p>
@@ -211,10 +211,17 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
             <>
               <div className="flex gap-1 mb-2 rounded-full overflow-hidden h-3">
                 {Object.entries(results.heatmap.tone_distribution || {}).map(([t, pct]) => {
-                  const colors = { alarming: '#ef4444', neutral: '#94a3b8', positive: '#22c55e', informative: '#3b82f6' }
+                  const colors = {
+                    alarming: '#ef4444',
+                    neutral: '#94a3b8',
+                    positive: '#22c55e',
+                    informative: '#3b82f6'
+                  }
                   return (
-                    <div key={t} className="h-3" title={t + ': ' + pct + '%'}
-                      style={{ width: pct + '%', background: colors[t] || '#94a3b8' }}></div>
+                    <div key={t} className="h-3"
+                      title={t + ': ' + pct + '%'}
+                      style={{ width: (pct || 0) + '%', background: colors[t] || '#94a3b8' }}>
+                    </div>
                   )
                 })}
               </div>
@@ -223,8 +230,17 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
               </p>
               <div className="flex justify-center gap-2 flex-wrap">
                 {Object.entries(results.heatmap.tone_distribution || {}).map(([t, pct]) => {
-                  const colors = { alarming: 'text-red-400', neutral: 'text-slate-400', positive: 'text-green-400', informative: 'text-blue-400' }
-                  return <span key={t} className={'text-xs ' + (colors[t] || 'text-slate-400')}>{t} {pct}%</span>
+                  const colors = {
+                    alarming: 'text-red-400',
+                    neutral: 'text-slate-400',
+                    positive: 'text-green-400',
+                    informative: 'text-blue-400'
+                  }
+                  return (
+                    <span key={t} className={'text-xs ' + (colors[t] || 'text-slate-400')}>
+                      {t} {pct || 0}%
+                    </span>
+                  )
                 })}
               </div>
             </>
@@ -241,7 +257,7 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
                     <span className="text-xs font-semibold capitalize" style={{ color: p.color }}>
                       {p.tone} - {p.dominant_emotion}
                     </span>
-                    <span className="text-slate-500 text-xs">{p.intensity}%</span>
+                    <span className="text-slate-500 text-xs">{p.intensity || 0}%</span>
                   </div>
                   <p className="text-slate-300 text-xs leading-relaxed">{p.text}</p>
                 </div>
@@ -250,7 +266,7 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
             <div className="grid grid-cols-2 gap-2 mt-3">
               {Object.entries(results.heatmap.tone_distribution || {}).map(([t, pct]) => (
                 <div key={t} className="bg-slate-700 rounded-lg p-2 text-center">
-                  <div className="text-white font-bold text-sm">{pct}%</div>
+                  <div className="text-white font-bold text-sm">{pct || 0}%</div>
                   <div className="text-slate-400 text-xs capitalize">{t}</div>
                 </div>
               ))}
@@ -268,9 +284,11 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
               <div className="flex items-center gap-2 mb-1">
                 <div className="flex-1 bg-slate-600 rounded-full h-3">
                   <div className="bg-cyan-500 h-3 rounded-full"
-                    style={{ width: results.factcheck.overall_confidence + '%' }}></div>
+                    style={{ width: Math.max(results.factcheck.overall_confidence || 0, 5) + '%' }}></div>
                 </div>
-                <span className="text-cyan-400 font-bold text-sm">{results.factcheck.overall_confidence}%</span>
+                <span className="text-cyan-400 font-bold text-sm">
+                  {results.factcheck.overall_confidence || 0}%
+                </span>
               </div>
               <p className="text-slate-400 text-xs text-center">Confidence Score</p>
             </>
@@ -282,44 +300,55 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
             <div className="flex items-center gap-2 mb-4">
               <div className="flex-1 bg-slate-700 rounded-full h-2">
                 <div className="bg-cyan-500 h-2 rounded-full"
-                  style={{ width: results.factcheck.overall_confidence + '%' }}></div>
+                  style={{ width: Math.max(results.factcheck.overall_confidence || 0, 5) + '%' }}></div>
               </div>
-              <span className="text-cyan-400 font-bold text-sm">{results.factcheck.overall_confidence}%</span>
+              <span className="text-cyan-400 font-bold text-sm">
+                {results.factcheck.overall_confidence || 0}%
+              </span>
             </div>
+
             {results.factcheck.red_flags?.map((flag, i) => (
               <p key={i} className="text-red-400 text-xs mb-2">Flag: {flag}</p>
             ))}
+
             {results.factcheck.verified_claims?.length > 0 && (
               <div className="mb-3">
                 <p className="text-slate-500 text-xs uppercase font-semibold mb-2">Claims</p>
                 {results.factcheck.verified_claims.map((c, i) => (
                   <div key={i} className="bg-slate-700 rounded-lg p-3 mb-2">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={c.status === 'Verified' ? 'text-xs font-semibold text-green-400'
+                      <span className={
+                        c.status === 'Verified' ? 'text-xs font-semibold text-green-400'
                         : c.status === 'Likely True' ? 'text-xs font-semibold text-yellow-400'
                         : c.status === 'Potentially False' ? 'text-xs font-semibold text-red-400'
                         : 'text-xs font-semibold text-orange-400'}>
                         {c.status}
                       </span>
-                      <span className="text-slate-500 text-xs ml-auto">{c.confidence}%</span>
+                      <span className="text-slate-500 text-xs ml-auto">{c.confidence || 0}%</span>
                     </div>
                     <p className="text-slate-300 text-xs mb-1">{c.claim}</p>
-                    {c.explanation && <p className="text-slate-500 text-xs italic mb-1">{c.explanation}</p>}
-                    {c.supported_by && <p className="text-blue-400 text-xs">Source: {c.supported_by}</p>}
+                    {c.explanation && (
+                      <p className="text-slate-500 text-xs italic mb-1">{c.explanation}</p>
+                    )}
+                    {c.supported_by && (
+                      <p className="text-blue-400 text-xs">Source: {c.supported_by}</p>
+                    )}
                   </div>
                 ))}
               </div>
             )}
+
             {results.factcheck.sources?.length > 0 && (
               <div className="mt-3">
                 <p className="text-slate-500 text-xs uppercase font-semibold mb-2">
-                  References ({results.factcheck.total_sources_checked} checked)
+                  References ({results.factcheck.total_sources_checked || 0} checked)
                 </p>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {results.factcheck.sources.map((src, i) => (
                     <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
                       className="flex items-start gap-2 bg-slate-700 hover:bg-slate-600 rounded-lg p-2 transition-colors group block">
-                      <span className={src.type === 'Wikipedia'
+                      <span className={
+                        src.type === 'Wikipedia'
                         ? 'text-xs px-1.5 py-0.5 rounded font-semibold flex-shrink-0 bg-gray-500/30 text-gray-300'
                         : src.type === 'Fact Check'
                         ? 'text-xs px-1.5 py-0.5 rounded font-semibold flex-shrink-0 bg-green-500/20 text-green-400'
@@ -327,8 +356,12 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
                         {src.type}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-slate-300 text-xs group-hover:text-white transition-colors truncate">{src.title}</p>
-                        {src.source && <p className="text-slate-500 text-xs">{src.source}</p>}
+                        <p className="text-slate-300 text-xs group-hover:text-white transition-colors truncate">
+                          {src.title}
+                        </p>
+                        {src.source && (
+                          <p className="text-slate-500 text-xs">{src.source}</p>
+                        )}
                       </div>
                       <span className="text-slate-500 group-hover:text-blue-400 text-xs flex-shrink-0">link</span>
                     </a>
@@ -336,6 +369,7 @@ export default function RightPanel({ results, runningAll, handleSuggestImages })
                 </div>
               </div>
             )}
+
             {results.factcheck.recommendations?.map((r, i) => (
               <p key={i} className="text-slate-400 text-xs mb-1 mt-3">- {r}</p>
             ))}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import { generateDraft, getSEO, injectImages, checkPlagiarism,
   getToneHeatmap, detectBias, getSocialPack,
@@ -11,14 +11,23 @@ import ImagePopup from '../components/editor/popups/ImagePopup'
 import SocialPopup from '../components/editor/popups/SocialPopup'
 
 export default function EditorPage() {
-  const [facts, setFacts] = useState(['', '', ''])
-  const [tone, setTone] = useState('neutral')
-  const [style, setStyle] = useState('news article')
-  const [articleSize, setArticleSize] = useState('medium')
+  const [facts, setFacts] = useState(() => {
+    const saved = localStorage.getItem('editor_facts')
+    return saved ? JSON.parse(saved) : ['', '', '']
+  })
+  const [tone, setTone] = useState(() => localStorage.getItem('editor_tone') || 'neutral')
+  const [style, setStyle] = useState(() => localStorage.getItem('editor_style') || 'news article')
+  const [articleSize, setArticleSize] = useState(() => localStorage.getItem('editor_size') || 'medium')
+  const [article, setArticle] = useState(() => {
+    const saved = localStorage.getItem('editor_article')
+    return saved ? JSON.parse(saved) : null
+  })
+  const [results, setResults] = useState(() => {
+    const saved = localStorage.getItem('editor_results')
+    return saved ? JSON.parse(saved) : {}
+  })
   const [selectedSocial, setSelectedSocial] = useState(null)
-  const [article, setArticle] = useState(null)
   const [generating, setGenerating] = useState(false)
-  const [results, setResults] = useState({})
   const [runningAll, setRunningAll] = useState(false)
   const [showImagePopup, setShowImagePopup] = useState(false)
   const [showSocialPopup, setShowSocialPopup] = useState(false)
@@ -26,6 +35,40 @@ export default function EditorPage() {
   const [imagesLoading, setImagesLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState(false)
   const [imageFilter, setImageFilter] = useState('All')
+
+  // Save facts to localStorage
+  useEffect(() => {
+    localStorage.setItem('editor_facts', JSON.stringify(facts))
+  }, [facts])
+
+  // Save tone
+  useEffect(() => {
+    localStorage.setItem('editor_tone', tone)
+  }, [tone])
+
+  // Save style
+  useEffect(() => {
+    localStorage.setItem('editor_style', style)
+  }, [style])
+
+  // Save size
+  useEffect(() => {
+    localStorage.setItem('editor_size', articleSize)
+  }, [articleSize])
+
+  // Save article
+  useEffect(() => {
+    if (article) {
+      localStorage.setItem('editor_article', JSON.stringify(article))
+    }
+  }, [article])
+
+  // Save results
+  useEffect(() => {
+    if (Object.keys(results).length > 0) {
+      localStorage.setItem('editor_results', JSON.stringify(results))
+    }
+  }, [results])
 
   const addFact = () => setFacts([...facts, ''])
   const removeFact = (i) => setFacts(facts.filter((_, idx) => idx !== i))
@@ -35,6 +78,23 @@ export default function EditorPage() {
     if (key === 'short') return 'short (150-200 words)'
     if (key === 'long') return 'long (800-1000 words)'
     return 'medium (400-500 words)'
+  }
+
+  const handleClear = () => {
+    setFacts(['', '', ''])
+    setArticle(null)
+    setResults({})
+    setSelectedImages([])
+    setSelectedSocial(null)
+    setTone('neutral')
+    setStyle('news article')
+    setArticleSize('medium')
+    localStorage.removeItem('editor_facts')
+    localStorage.removeItem('editor_article')
+    localStorage.removeItem('editor_results')
+    localStorage.removeItem('editor_tone')
+    localStorage.removeItem('editor_style')
+    localStorage.removeItem('editor_size')
   }
 
   const saveArticle = async (art, collectedResults) => {
@@ -77,8 +137,6 @@ export default function EditorPage() {
     setSelectedImages([])
     try {
       const sizeWords = getSizeWords(articleSize)
-      console.log('Size key:', articleSize)
-      console.log('Size words sent to backend:', sizeWords)
       const res = await generateDraft(validFacts, tone, style, sizeWords)
       const art = res.data.draft
       setArticle(art)
@@ -187,6 +245,7 @@ export default function EditorPage() {
           removeFact={removeFact}
           handleGenerate={handleGenerate}
           handleGenerateSocial={handleGenerateSocial}
+          handleClear={handleClear}
         />
 
         <CenterPanel
