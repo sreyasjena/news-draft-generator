@@ -62,6 +62,9 @@ export default function HistoryPage() {
     localStorage.setItem('editor_tone', art.tone || 'neutral')
     localStorage.setItem('editor_style', art.style || 'news article')
     localStorage.setItem('editor_size', art.size || 'medium')
+    localStorage.setItem('editor_facts', JSON.stringify(
+      art.facts && art.facts.length > 0 ? art.facts : ['', '', '']
+    ))
     localStorage.setItem('editor_results', JSON.stringify({
       seo: art.seo_score ? { seo_score: art.seo_score } : null,
       engagement: art.engagement_score ? { overall_score: art.engagement_score } : null,
@@ -282,6 +285,21 @@ export default function HistoryPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Facts used */}
+                  {selected.facts && selected.facts.length > 0 && (
+                    <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4 mb-5">
+                      <p className="text-slate-500 text-xs uppercase font-semibold mb-2">Facts Used</p>
+                      <div className="space-y-1">
+                        {selected.facts.map((fact, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <span className="text-blue-400 text-xs mt-0.5">•</span>
+                            <p className="text-slate-300 text-xs leading-relaxed">{fact}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Body */}
                   <div className="space-y-4 mb-6">

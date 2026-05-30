@@ -36,34 +36,29 @@ export default function EditorPage() {
   const [socialLoading, setSocialLoading] = useState(false)
   const [imageFilter, setImageFilter] = useState('All')
 
-  // Save facts to localStorage
+  // Save to localStorage
   useEffect(() => {
     localStorage.setItem('editor_facts', JSON.stringify(facts))
   }, [facts])
 
-  // Save tone
   useEffect(() => {
     localStorage.setItem('editor_tone', tone)
   }, [tone])
 
-  // Save style
   useEffect(() => {
     localStorage.setItem('editor_style', style)
   }, [style])
 
-  // Save size
   useEffect(() => {
     localStorage.setItem('editor_size', articleSize)
   }, [articleSize])
 
-  // Save article
   useEffect(() => {
     if (article) {
       localStorage.setItem('editor_article', JSON.stringify(article))
     }
   }, [article])
 
-  // Save results
   useEffect(() => {
     if (Object.keys(results).length > 0) {
       localStorage.setItem('editor_results', JSON.stringify(results))
@@ -114,6 +109,7 @@ export default function EditorPage() {
         tone: tone,
         style: style,
         size: articleSize,
+        facts: facts.filter(f => f.trim()),
         seo_score: collectedResults?.seo?.seo_score || null,
         engagement_score: collectedResults?.engagement?.overall_score || null,
         bias_direction: collectedResults?.bias?.bias_direction || null,
