@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { suggestAngles } from '../../api/client'
+
 const TONES = ['neutral', 'formal', 'engaging', 'urgent', 'analytical']
 const STYLES = ['news article', 'breaking news', 'feature story', 'opinion piece', 'press release']
 const SIZES = [
@@ -19,6 +22,26 @@ export default function LeftPanel({
   updateFact, addFact, removeFact,
   handleGenerate, handleGenerateSocial
 }) {
+  const [angles, setAngles] = useState([])
+  const [loadingAngles, setLoadingAngles] = useState(false)
+  const [showAngles, setShowAngles] = useState(false)
+
+  const handleSuggestAngles = async () => {
+    const validFacts = facts.filter(f => f.trim())
+    if (validFacts.length < 2) return alert('Please enter at least 2 facts first')
+    setLoadingAngles(true)
+    setShowAngles(false)
+    try {
+      const res = await suggestAngles(validFacts)
+      setAngles(res.data.angles)
+      setShowAngles(true)
+    } catch (e) {
+      alert('Error suggesting angles: ' + e.message)
+    } finally {
+      setLoadingAngles(false)
+    }
+  }
+
   return (
     <div className="w-72 bg-slate-800 border-r border-slate-700 flex flex-col overflow-y-auto flex-shrink-0">
       <div className="p-4 border-b border-slate-700">
@@ -48,10 +71,44 @@ export default function LeftPanel({
               )}
             </div>
           ))}
-          <button onClick={addFact} className="text-blue-400 hover:text-blue-300 text-xs mt-1">
-            + Add fact
-          </button>
+          <div className="flex items-center justify-between mt-1">
+            <button onClick={addFact} className="text-blue-400 hover:text-blue-300 text-xs">
+              + Add fact
+            </button>
+            <button
+              onClick={handleSuggestAngles}
+              disabled={loadingAngles}
+              className="text-purple-400 hover:text-purple-300 text-xs disabled:opacity-50">
+              {loadingAngles ? 'Thinking...' : '💡 Suggest Angles'}
+            </button>
+          </div>
         </div>
+
+        {/* Angle Suggestions */}
+        {showAngles && angles.length > 0 && (
+          <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-purple-400 text-xs font-semibold uppercase">Story Angles</p>
+              <button
+                onClick={() => setShowAngles(false)}
+                className="text-slate-500 hover:text-white text-xs">
+                hide
+              </button>
+            </div>
+            <div className="space-y-2">
+              {angles.map((angle, i) => (
+                <div key={i} className="bg-slate-700 rounded-lg p-2 border border-slate-600 hover:border-purple-500/40 transition-colors">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-purple-400 text-xs font-bold">{angle.angle_type}</span>
+                  </div>
+                  <p className="text-white text-xs font-semibold mb-1">{angle.title}</p>
+                  <p className="text-slate-400 text-xs leading-relaxed mb-1">{angle.description}</p>
+                  <p className="text-blue-400 text-xs italic">"{angle.sample_headline}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Tone */}
         <div>
