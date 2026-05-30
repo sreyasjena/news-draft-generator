@@ -6,15 +6,20 @@ export default function ProtectedRoute({ children }) {
   const [session, setSession] = useState(undefined)
 
   useEffect(() => {
+    // Get current session immediately
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
     })
+
     return () => subscription.unsubscribe()
   }, [])
 
+  // Still loading
   if (session === undefined) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -23,9 +28,11 @@ export default function ProtectedRoute({ children }) {
     )
   }
 
+  // Not logged in
   if (!session) {
     return <Navigate to="/login" replace />
   }
 
+  // Logged in
   return children
 }

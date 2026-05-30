@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
 import Navbar from '../components/Navbar'
+import { supabase } from '../utils/supabase'
 
 const words = ["Breaking News", "Feature Stories", "Press Releases", "Opinion Pieces", "Investigative Reports"]
 
@@ -34,8 +35,21 @@ export default function LandingPage() {
   const [typing, setTyping] = useState(true)
   const [scrollY, setScrollY] = useState(0)
   const [visibleSections, setVisibleSections] = useState({})
+  const [user, setUser] = useState(null)
   const sectionRefs = useRef({})
 
+  // Check if user is logged in
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Typewriter effect
   useEffect(() => {
     let timeout
     const word = words[currentWord]
@@ -56,12 +70,14 @@ export default function LandingPage() {
     return () => clearTimeout(timeout)
   }, [displayed, typing, currentWord])
 
+  // Parallax scroll
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Intersection observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
@@ -317,15 +333,17 @@ export default function LandingPage() {
 
           {/* CTA */}
           <div className="flex items-center justify-center gap-4 flex-wrap mb-12">
-            <Link to="/signup"
+            <Link to={user ? "/editor" : "/signup"}
               className="btn-gold inline-flex items-center gap-3 px-10 py-4 rounded-xl text-lg font-display animate-glow">
-              Start Writing Free →
+              {user ? "Go to Editor →" : "Start Writing Free →"}
             </Link>
-            <Link to="/login"
-              className="font-body inline-flex items-center px-8 py-4 rounded-xl text-lg text-slate-400 hover:text-white transition-all duration-300"
-              style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-              Login
-            </Link>
+            {!user && (
+              <Link to="/login"
+                className="font-body inline-flex items-center px-8 py-4 rounded-xl text-lg text-slate-400 hover:text-white transition-all duration-300"
+                style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Stats */}
@@ -544,7 +562,8 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {features.map((f, i) => (
-              <div key={i} className="card-hover rounded-2xl p-6 cursor-default"
+              <div key={i}
+                className="card-hover rounded-2xl p-6 cursor-default"
                 style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <div className="text-3xl mb-4">{f.icon}</div>
                 <h3 className="font-display text-white font-bold text-sm mb-2">{f.title}</h3>
@@ -602,7 +621,6 @@ export default function LandingPage() {
         ref={setRef('cta')}
         className={`py-40 px-6 relative overflow-hidden reveal ${visibleSections.cta ? 'visible' : ''}`}>
 
-        {/* Background */}
         <div className="absolute inset-0">
           <img src={UNSPLASH_IMAGES[4]} alt="bg"
             className="w-full h-full object-cover opacity-5"
@@ -646,7 +664,6 @@ export default function LandingPage() {
           }}>
         </div>
 
-        {/* Content */}
         <div className="max-w-4xl mx-auto text-center relative" style={{ zIndex: 10 }}>
           <p className="font-body text-xs font-bold uppercase tracking-[0.3em] mb-6"
             style={{ color: '#c9a84c' }}>
@@ -667,25 +684,26 @@ export default function LandingPage() {
             Free forever. No credit card required.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap mb-8">
-            <Link to="/signup"
+            <Link to={user ? "/editor" : "/signup"}
               className="btn-gold inline-flex items-center gap-3 px-14 py-5 rounded-xl text-xl font-display animate-glow">
-              Get Started Free →
+              {user ? "Go to Editor →" : "Get Started Free →"}
             </Link>
-            <Link to="/login"
-              className="font-body px-10 py-5 rounded-xl text-lg text-slate-400 hover:text-white transition-all duration-300 inline-flex items-center"
-              style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
-              Login
-            </Link>
+            {!user && (
+              <Link to="/login"
+                className="font-body px-10 py-5 rounded-xl text-lg text-slate-400 hover:text-white transition-all duration-300 inline-flex items-center"
+                style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                Login
+              </Link>
+            )}
           </div>
           <p className="font-body text-slate-700 text-sm">
-            Sign up in 30 seconds · Free forever · No credit card
+            {user ? "Welcome back — ready to write?" : "Sign up in 30 seconds · Free forever · No credit card"}
           </p>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="py-12 px-6"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+      <footer className="py-12 px-6" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -699,14 +717,8 @@ export default function LandingPage() {
           </div>
           <p className="font-body text-slate-700 text-sm">© 2026 NewsDraft AI. All rights reserved.</p>
           <div className="flex gap-6">
-            <Link to="/login"
-              className="font-body text-slate-600 hover:text-slate-300 text-sm transition-colors">
-              Login
-            </Link>
-            <Link to="/signup"
-              className="font-body text-slate-600 hover:text-slate-300 text-sm transition-colors">
-              Sign Up
-            </Link>
+            <Link to="/login" className="font-body text-slate-600 hover:text-slate-300 text-sm transition-colors">Login</Link>
+            <Link to="/signup" className="font-body text-slate-600 hover:text-slate-300 text-sm transition-colors">Sign Up</Link>
           </div>
         </div>
       </footer>
