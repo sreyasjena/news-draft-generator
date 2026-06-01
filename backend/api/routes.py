@@ -5,13 +5,13 @@ from pydantic import BaseModel
 
 from backend.core.llm_engine import (
     generate_news_draft,
-    refine_article_tone,
-    optimize_seo,
-    get_engagement_score,
-    get_angles,
-    get_social_pack,
-    get_bias_analysis
+    refine_tone,
+    score_engagement,
+    suggest_angles,
+    generate_social_pack,
+    detect_bias
 )
+from backend.features.seo_optimizer import optimize_seo
 from backend.features.fact_checker import check_facts
 from backend.features.image_injector import inject_images
 from backend.features.plagiarism_checker import check_plagiarism
@@ -49,10 +49,6 @@ class PlatformRequest(BaseModel):
     article: dict
     platform: str
 
-class TrendRequest(BaseModel):
-    category: str = "general"
-    country: str = "us"
-
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -78,7 +74,7 @@ def generate_draft(request: DraftRequest):
 @router.post("/refine-tone")
 def refine_tone_route(request: ToneRequest):
     try:
-        refined = refine_article_tone(request.article_text, request.target_tone)
+        refined = refine_tone(request.article_text, request.target_tone)
         return {"success": True, "refined_article": refined}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -159,14 +155,10 @@ def adapt_platform(request: PlatformRequest):
 @router.post("/fact-check")
 def fact_check(request: ArticleRequest):
     try:
-        # Extract raw facts from the article object
         facts = request.article.get("facts", [])
-
-        # Fallback — if no facts key, pull from body paragraphs
         if not facts:
             body = request.article.get("body", [])
             facts = body[:5]
-
         result = check_facts(facts)
         return {"success": True, "fact_check": result}
     except Exception as e:
@@ -181,7 +173,6 @@ async def voice_draft(file: UploadFile = File(...)):
             content = await file.read()
             tmp.write(content)
             tmp_path = tmp.name
-
         result = transcribe_audio(tmp_path)
         os.unlink(tmp_path)
         return {"success": True, "result": result}
@@ -192,16 +183,16 @@ async def voice_draft(file: UploadFile = File(...)):
 @router.post("/engagement-score")
 def engagement_score(request: ArticleRequest):
     try:
-        result = get_engagement_score(request.article)
+        result = score_engagement(request.article)
         return {"success": True, "score": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/suggest-angles")
-def suggest_angles(request: FactsRequest):
+def suggest_angles_route(request: FactsRequest):
     try:
-        result = get_angles(request.facts)
+        result = suggest_angles(request.facts)
         return {"success": True, "angles": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -210,16 +201,16 @@ def suggest_angles(request: FactsRequest):
 @router.post("/social-pack")
 def social_pack(request: ArticleRequest):
     try:
-        result = get_social_pack(request.article)
+        result = generate_social_pack(request.article)
         return {"success": True, "social_pack": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/detect-bias")
-def detect_bias(request: TextRequest):
+def detect_bias_route(request: TextRequest):
     try:
-        result = get_bias_analysis(request.text)
+        result = detect_bias(request.text)
         return {"success": True, "bias": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
