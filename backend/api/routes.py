@@ -15,11 +15,11 @@ from backend.features.seo_optimizer import optimize_seo
 from backend.features.fact_checker import check_facts
 from backend.features.image_injector import inject_images
 from backend.features.plagiarism_checker import check_plagiarism
-from backend.features.quote_flagger import flag_quotes
-from backend.features.tone_heatmap import get_tone_heatmap
-from backend.features.trend_fetcher import get_trends, get_trends_by_category
+from backend.features.quote_warning import flag_quotes
+from backend.features.tone_heatmap import generate_heatmap
+from backend.features.trend_radar import get_trending_topics, get_all_trending
 from backend.features.platform_adapter import adapt_for_platform
-from backend.features.voice_transcriber import transcribe_audio
+from backend.features.voice_to_draft import transcribe_audio
 
 router = APIRouter()
 
@@ -119,7 +119,7 @@ def flag_quotes_route(request: ArticleRequest):
 @router.post("/tone-heatmap")
 def tone_heatmap(request: ArticleRequest):
     try:
-        result = get_tone_heatmap(request.article)
+        result = generate_heatmap(request.article)
         return {"success": True, "heatmap": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -128,7 +128,7 @@ def tone_heatmap(request: ArticleRequest):
 @router.get("/trends")
 def trends():
     try:
-        result = get_trends()
+        result = get_all_trending()
         return {"success": True, "trends": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -137,7 +137,7 @@ def trends():
 @router.get("/trends/category")
 def trends_by_category(category: str = "general", country: str = "us"):
     try:
-        result = get_trends_by_category(category, country)
+        result = get_trending_topics(category, country)
         return {"success": True, "trends": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
