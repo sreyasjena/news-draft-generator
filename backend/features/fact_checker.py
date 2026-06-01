@@ -14,14 +14,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 
-# ── STEP 1: ENRICH FACTS ─────────────────────────────────────────────────────
+# ── STEP 1: ENRICH FACTS ──────────────────────────────────────────────────────
 
 def enrich_facts(facts: list[str]) -> list[str]:
-    """
-    Fix grammar and clarity only.
-    Returns EXACTLY the same number of facts as input.
-    Does NOT add new information.
-    """
     try:
         n = len(facts)
         numbered = "\n".join([f"{i+1}. {f}" for i, f in enumerate(facts)])
@@ -45,8 +40,7 @@ Return ONLY this JSON format:
 {{
     "enriched_facts": [
         "fact 1 corrected",
-        "fact 2 corrected",
-        ...exactly {n} items...
+        "fact 2 corrected"
     ]
 }}"""
 
@@ -60,7 +54,6 @@ Return ONLY this JSON format:
         result = json.loads(response.choices[0].message.content)
         enriched = result.get("enriched_facts", [])
 
-        # Hard enforcement — if count doesn't match, fall back to originals
         if len(enriched) != n:
             print(f"[WARN] Enrichment returned {len(enriched)} facts, expected {n}. Using originals.")
             return facts
@@ -69,10 +62,10 @@ Return ONLY this JSON format:
 
     except Exception as e:
         print(f"[ERROR] Fact enrichment failed: {e}. Using original facts.")
-        return facts  # Always fall back safely
+        return facts
 
 
-# ── STEP 2: API SEARCH FUNCTIONS ─────────────────────────────────────────────
+# ── STEP 2: API SEARCH FUNCTIONS ──────────────────────────────────────────────
 
 def search_wikipedia(query: str) -> dict:
     try:
@@ -87,7 +80,6 @@ def search_wikipedia(query: str) -> dict:
                 "url": data.get('content_urls', {}).get('desktop', {}).get('page', '')
             }
 
-        # Fallback to search API
         search_url = "https://en.wikipedia.org/w/api.php"
         params = {"action": "query", "list": "search", "srsearch": clean_query,
                   "format": "json", "srlimit": 2}
@@ -168,46 +160,59 @@ def search_google_fact_check(query: str) -> list:
         return []
 
 
-# ── STEP 3: SCORE BASED ON API EVIDENCE ONLY ─────────────────────────────────
+# ── STEP 3: SCORE BASED ON RELEVANT API EVIDENCE ONLY ────────────────────────
 
 def score_fact(fact: str, wiki: dict, news: list, factchecks: list) -> dict:
-    """
-    Score purely based on what APIs returned.
-    GPT-4o is NOT used for scoring — only for formatting the explanation.
-    """
     sources_found = []
     evidence_text = ""
 
-    if wiki.get("found"):
-        sources_found.append({
-            "type": "Wikipedia",
-            "title": fact[:60],
-            "url": wiki.get("url", ""),
-            "source": "Wikipedia"
-        })
-        evidence_text += f"Wikipedia: {wiki['summary'][:300]}\n"
+    # Keywords from the fact — used to check relevance of API results
+    fact_keywords = set(w.lower() for w in fact.split() if len(w) > 3)
 
+    # Wikipedia — only count if summary contains at least 2 keywords from fact
+    if wiki.get("found"):
+        wiki_words = set(wiki["summary"].lower().split())
+        overlap = fact_keywords & wiki_words
+        if len(overlap) >= 2:
+            sources_found.append({
+                "type": "Wikipedia",
+                "title": fact[:60],
+                "url": wiki.get("url", ""),
+                "source": "Wikipedia"
+            })
+            evidence_text += f"Wikipedia: {wiki['summary'][:300]}\n"
+
+    # NewsAPI — only count if title+description contains at least 2 keywords from fact
     for article in news[:2]:
         if article.get("title"):
-            sources_found.append({
-                "type": "NewsAPI",
-                "title": article["title"],
-                "url": article["url"],
-                "source": article["source"]
-            })
-            evidence_text += f"News ({article['source']}): {article['title']}. {article.get('description','')[:150]}\n"
+            article_words = set(
+                (article["title"] + " " + article.get("description", "")).lower().split()
+            )
+            overlap = fact_keywords & article_words
+            if len(overlap) >= 2:
+                sources_found.append({
+                    "type": "NewsAPI",
+                    "title": article["title"],
+                    "url": article["url"],
+                    "source": article["source"]
+                })
+                evidence_text += f"News ({article['source']}): {article['title']}. {article.get('description', '')[:150]}\n"
 
+    # Google Fact Check — only count if claim contains at least 2 keywords from fact
     for fc in factchecks[:1]:
         if fc.get("claim"):
-            sources_found.append({
-                "type": "Fact Check",
-                "title": fc["claim"][:80],
-                "url": fc["url"],
-                "source": fc["publisher"]
-            })
-            evidence_text += f"Fact Check ({fc['publisher']}): {fc['claim']} — Rating: {fc['rating']}\n"
+            fc_words = set(fc["claim"].lower().split())
+            overlap = fact_keywords & fc_words
+            if len(overlap) >= 2:
+                sources_found.append({
+                    "type": "Fact Check",
+                    "title": fc["claim"][:80],
+                    "url": fc["url"],
+                    "source": fc["publisher"]
+                })
+                evidence_text += f"Fact Check ({fc['publisher']}): {fc['claim']} — Rating: {fc['rating']}\n"
 
-    # ── Pure API-based scoring — no GPT involvement ──
+    # ── Scoring based purely on relevant source count ──
     count = len(sources_found)
 
     if count >= 3:
@@ -226,12 +231,12 @@ def score_fact(fact: str, wiki: dict, news: list, factchecks: list) -> dict:
             "claim": fact,
             "status": status,
             "confidence": confidence,
-            "explanation": "No supporting evidence found in Wikipedia, NewsAPI, or Google Fact Check. This claim could not be verified against any published source.",
+            "explanation": "No relevant supporting evidence found in Wikipedia, NewsAPI, or Google Fact Check. This claim could not be verified against any published source.",
             "supported_by": "No sources found",
             "sources": []
         }
 
-    # GPT-4o only writes the explanation — it does NOT change the score
+    # GPT-4o only writes the explanation — does NOT score
     try:
         explanation_prompt = f"""A fact-checking system found the following evidence for this claim.
 Write a 1-2 sentence plain English explanation of what the evidence shows.
@@ -252,7 +257,7 @@ Write only the explanation sentence(s). No JSON, no extra text."""
         )
         explanation = response.choices[0].message.content.strip()
     except Exception:
-        explanation = f"Found {count} source(s) that relate to this claim."
+        explanation = f"Found {count} relevant source(s) that relate to this claim."
 
     return {
         "claim": fact,
@@ -264,18 +269,11 @@ Write only the explanation sentence(s). No JSON, no extra text."""
     }
 
 
-# ── MAIN ENTRY POINT ─────────────────────────────────────────────────────────
+# ── MAIN ENTRY POINT ──────────────────────────────────────────────────────────
 
 def check_facts(facts: list[str]) -> dict:
-    """
-    New flow:
-    1. Enrich facts (grammar fix only, exact count preserved)
-    2. Search each enriched fact across 3 APIs
-    3. Score based ONLY on API evidence
-    4. GPT-4o only writes explanation text, never scores
-    """
     try:
-        # Step 1 — Enrich
+        # Step 1 — Enrich facts (grammar fix only, exact count preserved)
         enriched_facts = enrich_facts(facts)
 
         # Step 2 & 3 — Search + Score each fact
