@@ -1,26 +1,30 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from pydantic import BaseModel
-import tempfile
 import os
+import tempfile
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from pydantic import BaseModel
 
-from backend.core.llm_engine import generate_news_draft
-from backend.features.seo_optimizer import optimize_seo
+from backend.core.llm_engine import (
+    generate_news_draft,
+    refine_article_tone,
+    optimize_seo,
+    get_engagement_score,
+    get_angles,
+    get_social_pack,
+    get_bias_analysis
+)
+from backend.features.fact_checker import check_facts
 from backend.features.image_injector import inject_images
 from backend.features.plagiarism_checker import check_plagiarism
-from backend.features.quote_warning import flag_quotes
-from backend.features.tone_heatmap import generate_heatmap
-from backend.features.trend_radar import get_all_trending, get_trending_topics
+from backend.features.quote_flagger import flag_quotes
+from backend.features.tone_heatmap import get_tone_heatmap
+from backend.features.trend_fetcher import get_trends, get_trends_by_category
 from backend.features.platform_adapter import adapt_for_platform
-from backend.features.fact_checker import check_facts
-from backend.features.voice_to_draft import transcribe_audio
-from backend.features.engagement_score import get_engagement_score
-from backend.features.angle_suggester import get_angles
-from backend.features.social_media_pack import get_social_pack
-from backend.features.bias_detector import get_bias_analysis
-from backend.features.tone_refiner import refine_article_tone
+from backend.features.voice_transcriber import transcribe_audio
 
 router = APIRouter()
 
+
+# ── Request Models ────────────────────────────────────────────────────────────
 
 class DraftRequest(BaseModel):
     facts: list[str]
@@ -49,10 +53,8 @@ class TrendRequest(BaseModel):
     category: str = "general"
     country: str = "us"
 
-class SocialPackRequest(BaseModel):
-    article: dict
-    platform: str = "twitter"
 
+# ── Routes ────────────────────────────────────────────────────────────────────
 
 @router.get("/health")
 def health_check():
@@ -104,7 +106,7 @@ def image_inject(request: ArticleRequest):
 def plagiarism_check(request: TextRequest):
     try:
         result = check_plagiarism(request.text)
-        return {"success": True, "result": result}
+        return {"success": True, "plagiarism": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -121,32 +123,32 @@ def flag_quotes_route(request: ArticleRequest):
 @router.post("/tone-heatmap")
 def tone_heatmap(request: ArticleRequest):
     try:
-        result = generate_heatmap(request.article)
+        result = get_tone_heatmap(request.article)
         return {"success": True, "heatmap": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/trends")
-def get_trends():
+def trends():
     try:
-        result = get_all_trending()
+        result = get_trends()
         return {"success": True, "trends": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/trends/category")
-def get_trends_by_category(request: TrendRequest):
+@router.get("/trends/category")
+def trends_by_category(category: str = "general", country: str = "us"):
     try:
-        result = get_trending_topics(request.category, request.country)
+        result = get_trends_by_category(category, country)
         return {"success": True, "trends": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/adapt-platform")
-def platform_adapt(request: PlatformRequest):
+def adapt_platform(request: PlatformRequest):
     try:
         result = adapt_for_platform(request.article, request.platform)
         return {"success": True, "adapted": result}
@@ -157,7 +159,15 @@ def platform_adapt(request: PlatformRequest):
 @router.post("/fact-check")
 def fact_check(request: ArticleRequest):
     try:
-        result = check_facts(request.article)
+        # Extract raw facts from the article object
+        facts = request.article.get("facts", [])
+
+        # Fallback — if no facts key, pull from body paragraphs
+        if not facts:
+            body = request.article.get("body", [])
+            facts = body[:5]
+
+        result = check_facts(facts)
         return {"success": True, "fact_check": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -171,6 +181,7 @@ async def voice_draft(file: UploadFile = File(...)):
             content = await file.read()
             tmp.write(content)
             tmp_path = tmp.name
+
         result = transcribe_audio(tmp_path)
         os.unlink(tmp_path)
         return {"success": True, "result": result}
@@ -197,9 +208,9 @@ def suggest_angles(request: FactsRequest):
 
 
 @router.post("/social-pack")
-def social_pack(request: SocialPackRequest):
+def social_pack(request: ArticleRequest):
     try:
-        result = get_social_pack(request.article, request.platform)
+        result = get_social_pack(request.article)
         return {"success": True, "social_pack": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
